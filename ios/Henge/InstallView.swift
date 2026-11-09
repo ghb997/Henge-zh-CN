@@ -1,4 +1,5 @@
 // Simplified Chinese translation, 2026-11-09.
+// Separate mobile-data downloads from JIT-dependent installation, 2026-11-09.
 import SwiftUI
 
 /// Download macOS (or use a copy already on this device) and install it on a new Mac.
@@ -25,6 +26,7 @@ struct InstallView: View {
                     switch installer.phase {
                     case .idle: chooser
                     case .downloading, .preparing, .installing: progress
+                    case .downloaded(let text): finished(text, downloaded: true)
                     case .done(let text): finished(text)
                     case .failed(let text): failed(text)
                     }
@@ -34,7 +36,7 @@ struct InstallView: View {
                 .deskColumn()
             }
             .background(Desk.page)
-            .navigationTitle(installer.busy ? "正在安装" : "安装 macOS")
+            .navigationTitle(installer.busy ? (installer.downloadingOnly ? "正在下载" : "正在安装") : "安装 macOS")
             .task {
                 while !Task.isCancelled { // the region may be claimed after a hand-off to StikDebug
                     jitReady = JITBootstrap.ready
@@ -116,18 +118,39 @@ struct InstallView: View {
         }
         .deskCard()
 
-        Button(Installer.haveImage(release) ? "安装" : "下载并安装") {
-            installer.start(release, name: name.isEmpty ? "Mac" : name, ramMB: ramGB * 1024, cpus: cpus, keepImage: !deleteAfter)
+        if Installer.haveImage(release) {
+            Button("安装") {
+                installer.start(release, name: name.isEmpty ? "Mac" : name, ramMB: ramGB * 1024, cpus: cpus, keepImage: !deleteAfter)
+            }
+            .buttonStyle(DeskButtonStyle(enabled: jitReady && !Device.chipTooOld))
+            .disabled(!jitReady || Device.chipTooOld)
+            .padding(.top, 20)
+            Text(Device.chipTooOld ? Device.chipTooOldText : jitReady ? "请保持 Henge 打开，并为 \(Device.name) 接通电源。约需 \(ByteText.string(UInt64(Installer.spaceNeeded(release)))) 可用空间。"
+                                    : JITBootstrap.lastFailure ?? "镜像已下载，请开启 JIT 后安装。\(jit.automaticDescription)")
+                .font(.system(size: 13))
+                .foregroundStyle(Desk.dim)
+                .multilineTextAlignment(.center)
+                .padding(.top, 10)
+        } else {
+            Button("下载镜像") {
+                installer.start(release, name: name.isEmpty ? "Mac" : name, ramMB: ramGB * 1024, cpus: cpus,
+                                keepImage: true, downloadOnly: true)
+            }
+            .buttonStyle(DeskButtonStyle())
+            .padding(.top, 20)
+            Text("支持 Wi-Fi 和移动数据，约需 \(ByteText.string(UInt64(release.bytes))) 可用空间。下载完成后，开启 JIT 即可安装。")
+                .font(.system(size: 13))
+                .foregroundStyle(Desk.dim)
+                .multilineTextAlignment(.center)
+                .padding(.top, 10)
+            if Device.chipTooOld {
+                Text(Device.chipTooOldText)
+                    .font(.system(size: 13))
+                    .foregroundStyle(Desk.dim)
+                    .multilineTextAlignment(.center)
+                    .padding(.top, 10)
+            }
         }
-        .buttonStyle(DeskButtonStyle(enabled: jitReady && !Device.chipTooOld))
-        .disabled(!jitReady || Device.chipTooOld)
-        .padding(.top, 20)
-        Text(Device.chipTooOld ? Device.chipTooOldText : jitReady ? "请保持 Henge 打开，并为 \(Device.name) 接通电源。约需 \(ByteText.string(UInt64(Installer.spaceNeeded(release)))) 可用空间。"
-                                : JITBootstrap.lastFailure ?? "请先开启 JIT。\(jit.automaticDescription)")
-            .font(.system(size: 13))
-            .foregroundStyle(Desk.dim)
-            .multilineTextAlignment(.center)
-            .padding(.top, 10)
         if !jitReady && !Device.chipTooOld {
             // Before any Mac exists, this is the only place to ask for JIT (#23).
             Button("开启 JIT") { jit.enable() }
@@ -189,7 +212,9 @@ struct InstallView: View {
     }
 
     @ViewBuilder private var progress: some View {
-        Text("正在这台 \(Device.name) 上安装 \(release.name)。请保持 Henge 打开。")
+        Text(installer.downloadingOnly
+             ? "正在下载 \(installer.machineName)。请保持 Henge 打开。"
+             : "正在这台 \(Device.name) 上安装 \(release.name)。请保持 Henge 打开。")
             .font(.system(size: 16))
             .foregroundStyle(Desk.dim)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -201,7 +226,9 @@ struct InstallView: View {
                 Text("\(Int(fraction * 100))%")
                     .font(.system(size: 66, weight: .bold))
                     .monospacedDigit()
-                Text(timeLeft ?? "第 \(stage + 1) 步，共 \(Self.stages.count) 步")
+                Text(timeLeft ?? (installer.downloadingOnly
+                     ? "已下载 \(ByteText.string(UInt64(max(installer.received, 0)))) / \(ByteText.string(UInt64(max(installer.expected, 0))))"
+                     : "第 \(stage + 1) 步，共 \(Self.stages.count) 步"))
                     .font(.system(size: 15))
                     .foregroundStyle(Desk.dim)
                     .padding(.top, 2)
@@ -222,26 +249,28 @@ struct InstallView: View {
             stageStarted = Date()
         }
 
-        DeskHeading("安装步骤")
-        VStack(spacing: 0) {
-            ForEach(Array(Self.stages.enumerated()), id: \.offset) { i, title in
-                HStack {
-                    Text(title)
-                        .font(.system(size: 16, weight: i == stage ? .semibold : .regular))
-                        .foregroundStyle(i > stage ? Desk.faint : Desk.text)
-                    Spacer()
-                    if i < stage {
-                        Image(systemName: "checkmark").font(.system(size: 15, weight: .bold)).foregroundStyle(Desk.good)
-                    } else if i == stage {
-                        ProgressView().controlSize(.small)
+        if !installer.downloadingOnly {
+            DeskHeading("安装步骤")
+            VStack(spacing: 0) {
+                ForEach(Array(Self.stages.enumerated()), id: \.offset) { i, title in
+                    HStack {
+                        Text(title)
+                            .font(.system(size: 16, weight: i == stage ? .semibold : .regular))
+                            .foregroundStyle(i > stage ? Desk.faint : Desk.text)
+                        Spacer()
+                        if i < stage {
+                            Image(systemName: "checkmark").font(.system(size: 15, weight: .bold)).foregroundStyle(Desk.good)
+                        } else if i == stage {
+                            ProgressView().controlSize(.small)
+                        }
                     }
+                    .padding(.horizontal, 17)
+                    .padding(.vertical, 13)
+                    if i < Self.stages.count - 1 { Rectangle().fill(Desk.hairline).frame(height: 0.5) }
                 }
-                .padding(.horizontal, 17)
-                .padding(.vertical, 13)
-                if i < Self.stages.count - 1 { Rectangle().fill(Desk.hairline).frame(height: 0.5) }
             }
+            .deskCard()
         }
-        .deskCard()
 
         Button(details ? "隐藏详情" : "显示详情") { withAnimation { details.toggle() } }
             .font(.system(size: 15, weight: .semibold))
@@ -262,11 +291,14 @@ struct InstallView: View {
         }
     }
 
-    private func finished(_ text: String) -> some View {
+    private func finished(_ text: String, downloaded: Bool = false) -> some View {
         VStack(spacing: 14) {
             Image(systemName: "checkmark.circle.fill").font(.system(size: 54)).foregroundStyle(Desk.good).padding(.top, 8)
-            Text("安装完成").font(.system(size: 24, weight: .bold))
+            Text(downloaded ? "下载完成" : "安装完成").font(.system(size: 24, weight: .bold))
             Text(text).font(.system(size: 15)).foregroundStyle(Desk.dim).multilineTextAlignment(.center)
+            if downloaded {
+                Button("返回安装") { installer.reset() }.buttonStyle(DeskButtonStyle())
+            }
         }
         .padding(20)
         .frame(maxWidth: .infinity)
@@ -276,9 +308,11 @@ struct InstallView: View {
 
     @ViewBuilder private func failed(_ text: String) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("安装失败").font(.system(size: 22, weight: .bold))
+            Text(installer.downloadingOnly ? "下载失败" : "安装失败").font(.system(size: 22, weight: .bold))
             Text(text).font(.system(size: 15))
-            Text("请在多任务界面上滑退出 Henge，然后重新打开再试。每次启动 Henge 只能启动一台 Mac。")
+            Text(installer.downloadingOnly
+                 ? "请检查网络连接、蜂窝数据权限和可用空间，返回后重试。"
+                 : "请在多任务界面上滑退出 Henge，然后重新打开再试。每次启动 Henge 只能启动一台 Mac。")
                 .font(.system(size: 13)).foregroundStyle(Desk.dim)
             Button("返回") { installer.reset() }.buttonStyle(DeskButtonStyle()).padding(.top, 6)
         }

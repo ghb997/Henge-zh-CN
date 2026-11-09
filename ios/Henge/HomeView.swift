@@ -1,4 +1,5 @@
 // Simplified Chinese translation, 2026-11-09.
+// Show standalone image download status, 2026-11-09.
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -72,7 +73,9 @@ struct HomeView: View {
         }
         if installer.busy {
             Button { tab = .install } label: {
-                NoticeRow(symbol: "arrow.down.circle.fill", text: "正在安装 \(installer.machineName)…", trailing: "查看")
+                NoticeRow(symbol: "arrow.down.circle.fill",
+                          text: installer.downloadingOnly ? "正在下载 \(installer.machineName)…" : "正在安装 \(installer.machineName)…",
+                          trailing: "查看")
             }
         }
         if let name = machines.importing {

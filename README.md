@@ -8,12 +8,13 @@
 
 ## 下载与安装
 
-从本仓库 Releases 下载 `Henge-zh-CN.ipa`，使用 SideStore 或 AltStore 签名并安装。发布包采用 ad-hoc 签名，侧载工具会使用你的证书重新签名。运行要求为 iOS / iPadOS 17 或更高版本，以及 A14 / M1 或更新的芯片。[下载中文版](https://github.com/ghb997/Henge-zh-CN/releases)
+从本仓库 Releases 下载最新版 IPA，使用 SideStore 或 AltStore 签名并安装。发布包采用 ad-hoc 签名，侧载工具会使用你的证书重新签名。运行要求为 iOS / iPadOS 17 或更高版本，以及 A14 / M1 或更新的芯片。[下载中文版](https://github.com/ghb997/Henge-zh-CN/releases)
 
 1. 安装后打开“Henge 中文”。
-2. 在“设置”中配置并启用 JIT。上游支持 StikDebug、适用系统上的 TrollStore / TrollStore Lite，以及 iOS 26 及以上的内置 StikJIT。内置方案需要按照向导完成 LocalDevVPN 和设备配对。
-3. 打开“安装”，推荐选择 macOS Sequoia 15.6.1。安装期间保持 Henge 在前台并连接电源。
-4. 安装完成后，在后台上划关闭 Henge，再次打开并轻点“启动”。
+2. 打开“安装”，选择 macOS 版本并轻点“下载镜像”。下载支持 Wi-Fi 和移动数据，可以在 JIT 设置前完成。使用移动数据时，请在 iOS“设置”中允许 Henge 使用蜂窝数据，Sequoia 镜像约消耗 16.81 GB 流量。
+3. 下载完成后轻点“返回安装”，在“设置”或安装页面配置并启用 JIT。上游支持 StikDebug、适用系统上的 TrollStore / TrollStore Lite，以及 iOS 26 及以上的内置 StikJIT。内置方案需要按照向导完成 LocalDevVPN 和设备配对。
+4. 轻点“安装”，使用已下载的镜像安装 macOS。推荐选择 macOS Sequoia 15.6.1，下载和安装期间保持 Henge 在前台并连接电源。
+5. 安装完成后，在后台上划关闭 Henge，再次打开并轻点“启动”。
 
 macOS Sequoia 安装过程需要约 43 GB 可用空间，其中约 17 GB 用于下载安装镜像，约 26 GB 用于虚拟 Mac。安装镜像可在安装完成后删除。每台 Mac 可以分配 4、6 或 8 GB 内存。支持 increased-memory-limit 权限的签名证书可提高应用内存上限。
 
@@ -47,7 +48,7 @@ macOS Sequoia 安装过程需要约 43 GB 可用空间，其中约 17 GB 用于�
 
 ## 构建 IPA
 
-在本仓库 Actions 中运行 `Build Henge Chinese IPA` 工作流。工作流使用 GitHub 托管的 `xcode-27` macOS runner，执行现有 Swift 编译检查、显示路由测试和 JIT 建议测试，然后打包 IPA。完成后可下载 `Henge-zh-CN-ipa-<提交号>` artifact。
+在本仓库 Actions 中运行 `Build Henge Chinese IPA` 工作流。工作流使用 GitHub 托管的 `xcode-27` macOS runner，执行 Swift 编译检查、显示路由、JIT 建议和独立下载回归测试，然后打包 IPA。完成后可下载 `Henge-zh-CN-ipa-<提交号>` artifact。
 
 Husk 依赖固定为 `afe83d45b31194c4cc9f7b3db7ec2c757db8346e`，工作流会构建网络库和设备配对库。依赖源码、编译命令和缓存路径见工作流文件。[工作流](.github/workflows/build-henge.yml)
 

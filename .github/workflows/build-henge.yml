@@ -80,6 +80,7 @@ jobs:
         run: |
           bash ios/scripts/check_display.sh
           make test-jit-advice
+          python3 tests/test_installer_download.py
 
       - name: Fetch Husk's third-party sources
         working-directory: Husk

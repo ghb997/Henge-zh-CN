@@ -1,4 +1,5 @@
 // Simplified Chinese translation, 2026-11-09.
+// Allow cellular image downloads before JIT setup, 2026-11-09.
 import Foundation
 import UIKit
 
@@ -37,6 +38,7 @@ final class Installer: NSObject, ObservableObject {
         case downloading
         case preparing
         case installing
+        case downloaded(String)
         case done(String)
         case failed(String)
     }
@@ -47,6 +49,7 @@ final class Installer: NSObject, ObservableObject {
     @Published private(set) var step: Int = 0
     @Published private(set) var stepProgress: Double = 0
     @Published private(set) var machineName = ""
+    @Published private(set) var downloadingOnly = false
 
     private var session: URLSession?
     /* Background time, so a moment out of the foreground (a notification, iPhone Mirroring reconnecting)
@@ -78,7 +81,9 @@ final class Installer: NSObject, ObservableObject {
     static func deleteImage(_ r: MacOSRelease) { try? FileManager.default.removeItem(at: imagePath(r)) }
 
     /// Free space an install takes: the new Mac's disk, and the download if it is not here yet.
-    static func spaceNeeded(_ r: MacOSRelease) -> Int64 { (haveImage(r) ? 0 : r.bytes) + newMacBytes }
+    static func spaceNeeded(_ r: MacOSRelease, downloadOnly: Bool = false) -> Int64 {
+        (haveImage(r) ? 0 : r.bytes) + (downloadOnly ? 0 : newMacBytes)
+    }
     private static let newMacBytes: Int64 = 24 << 30
 
     func reset() { if !busy { phase = .idle } }
@@ -89,9 +94,18 @@ final class Installer: NSObject, ObservableObject {
         grace = .invalid
     }
 
-    func start(_ release: MacOSRelease, name: String, ramMB: Int, cpus: Int, keepImage: Bool) {
+    func start(_ release: MacOSRelease, name: String, ramMB: Int, cpus: Int, keepImage: Bool,
+               downloadOnly: Bool = false) {
         guard !busy else { return }
-        machineName = name
+        downloadingOnly = downloadOnly
+        machineName = downloadOnly ? release.name : name
+        received = 0
+        expected = release.bytes
+        step = 0
+        stepProgress = 0
+        lastResumeData = nil // A new operation may select a different restore image.
+        // Claim the operation before yielding so repeated taps cannot start overlapping downloads.
+        phase = downloadOnly ? .downloading : .preparing
         UIApplication.shared.isIdleTimerDisabled = true // the screen locking would suspend the download and the restore
         grace = UIApplication.shared.beginBackgroundTask(withName: "Henge install") {
             MainActor.assumeIsolated { Installer.shared.endGrace() }
@@ -100,7 +114,15 @@ final class Installer: NSObject, ObservableObject {
             defer { UIApplication.shared.isIdleTimerDisabled = false; endGrace() }
             var made: VirtualMac?
             do {
-                try checkSpace(release)
+                guard downloadOnly || JITBootstrap.ready else {
+                    throw message("请先开启 JIT，再安装 macOS。")
+                }
+                try checkSpace(release, downloadOnly: downloadOnly)
+                if downloadOnly {
+                    _ = try await download(release)
+                    phase = .downloaded("\(release.name) 已下载并保存在此设备上。开启 JIT 后，返回安装页面轻点“安装”。")
+                    return
+                }
                 let rom = try await BootROM.file() // before the long download, so a problem shows up at once
                 HengeLog.log("install", "boot ROM ready")
                 let ipsw = try await download(release)
@@ -122,12 +144,12 @@ final class Installer: NSObject, ObservableObject {
         }
     }
 
-    private func checkSpace(_ r: MacOSRelease) throws {
+    private func checkSpace(_ r: MacOSRelease, downloadOnly: Bool) throws {
         let free = (try? URL(fileURLWithPath: NSHomeDirectory()).resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey]))?
             .volumeAvailableCapacityForImportantUsage ?? 0
-        let needed = Self.spaceNeeded(r)
+        let needed = Self.spaceNeeded(r, downloadOnly: downloadOnly)
         if free > 0 && free < needed {
-            throw message("本次安装需要约 \(ByteText.string(UInt64(needed))) 可用空间，此 \(Device.name) 当前可用 \(ByteText.string(UInt64(free)))。")
+            throw message("本次操作需要约 \(ByteText.string(UInt64(needed))) 可用空间，此 \(Device.name) 当前可用 \(ByteText.string(UInt64(free)))。")
         }
     }
 
@@ -160,10 +182,17 @@ final class Installer: NSObject, ObservableObject {
 
     private func downloadOnce(_ url: URL) async throws -> URL {
         let cfg = URLSessionConfiguration.default
+        cfg.allowsCellularAccess = true
+        cfg.allowsExpensiveNetworkAccess = true
+        cfg.allowsConstrainedNetworkAccess = true
         cfg.timeoutIntervalForRequest = 120
         cfg.timeoutIntervalForResource = 48 * 3600
         let s = URLSession(configuration: cfg, delegate: self, delegateQueue: nil)
         session = s
+        defer {
+            s.finishTasksAndInvalidate()
+            session = nil
+        }
         return try await withCheckedThrowingContinuation { (c: CheckedContinuation<URL, Error>) in
             downloadContinuation = c
             let task = lastResumeData.map { s.downloadTask(withResumeData: $0) } ?? s.downloadTask(with: url)
@@ -258,6 +287,7 @@ extension Installer: URLSessionDownloadDelegate {
     nonisolated func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64,
                                 totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
         Task { @MainActor in
+            guard self.session === session else { return }
             self.received = totalBytesWritten
             if totalBytesExpectedToWrite > 0 { self.expected = totalBytesExpectedToWrite }
         }
@@ -265,7 +295,10 @@ extension Installer: URLSessionDownloadDelegate {
 
     nonisolated func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didResumeAtOffset fileOffset: Int64,
                                 expectedTotalBytes: Int64) {
-        Task { @MainActor in self.received = fileOffset }
+        Task { @MainActor in
+            guard self.session === session else { return }
+            self.received = fileOffset
+        }
     }
 
     nonisolated func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
@@ -279,11 +312,13 @@ extension Installer: URLSessionDownloadDelegate {
             try? FileManager.default.removeItem(at: target)
             try FileManager.default.moveItem(at: location, to: target)
             Task { @MainActor in
+                guard self.session === session else { return }
                 self.downloadContinuation?.resume(returning: target)
                 self.downloadContinuation = nil
             }
         } catch {
             Task { @MainActor in
+                guard self.session === session else { return }
                 self.downloadContinuation?.resume(throwing: error)
                 self.downloadContinuation = nil
             }
@@ -293,6 +328,7 @@ extension Installer: URLSessionDownloadDelegate {
     nonisolated func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         guard let error else { return }
         Task { @MainActor in
+            guard self.session === session else { return }
             self.downloadContinuation?.resume(throwing: error)
             self.downloadContinuation = nil
         }
