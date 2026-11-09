@@ -1,3 +1,4 @@
+// Simplified Chinese translation, 2026-11-09.
 #include "vm.h"
 #include "pvg_lite.h"
 
@@ -98,11 +99,11 @@ void hv_vm_set_poll(void (*poll)(void)) { extra_poll = poll; }
 
 const char *hv_vm_reason_name(int r) {
     switch (r) {
-    case HV_EXIT_HALT: return "halt";
-    case HV_EXIT_WFI: return "wfi with nothing to wake it";
-    case HV_EXIT_UNSUPPORTED: return "unsupported";
-    case HV_EXIT_FAULT_LOOP: return "fault on the exception vector";
-    default: return "other";
+    case HV_EXIT_HALT: return "已停机";
+    case HV_EXIT_WFI: return "等待中断，暂无唤醒事件";
+    case HV_EXIT_UNSUPPORTED: return "遇到不支持的指令";
+    case HV_EXIT_FAULT_LOOP: return "异常向量处发生故障";
+    default: return "其他原因";
     }
 }
 
@@ -224,19 +225,19 @@ uint64_t hv_vm_gpu_frames(void) {
 }
 
 int hv_vm_create(const HvVmConfig *c, char *err, size_t errlen) {
-    if (!c->rom || !c->disk || !c->aux) return fail(err, errlen, "The ROM, disk and auxiliary storage are all needed.");
+    if (!c->rom || !c->disk || !c->aux) return fail(err, errlen, "需要提供 ROM、磁盘和辅助存储。");
     struct sigaction ill = {.sa_flags = SA_SIGINFO | SA_ONSTACK};
     ill.sa_sigaction = on_ill;
     sigaction(SIGILL, &ill, &prior_ill);
     sigaction(SIGBUS, &ill, &prior_bus);
     sigaction(SIGSEGV, &ill, &prior_segv);
     signal(SIGPIPE, SIG_IGN); /* a guest connection closing at the far end must not end the machine */
-    if (hv_disk_open(&disk, c->disk, 0, 0) != 0) return fail(err, errlen, "Cannot open the disk image.");
+    if (hv_disk_open(&disk, c->disk, 0, 0) != 0) return fail(err, errlen, "无法打开磁盘映像。");
     if (hv_disk_open(&aux, c->aux, c->aux_offset ? c->aux_offset : 16384, 0) != 0)
-        return fail(err, errlen, "Cannot open the auxiliary storage.");
+        return fail(err, errlen, "无法打开辅助存储。");
     size_t jit = c->jit_bytes ? c->jit_bytes : (size_t)768 << 20;
     int r = c->jit_rx ? hv_machine_init_jit(&m, c->jit_rx, c->jit_rw, jit) : hv_machine_init(&m, jit);
-    if (r != 0) return fail(err, errlen, "Cannot set up the JIT region.");
+    if (r != 0) return fail(err, errlen, "无法设置 JIT 内存区域。");
     m.log = c->log;
     m.gen_checks = getenv("HV_JIT_POISON") != NULL;
     if (getenv("HV_SLOW_MEM")) m.slow_mem = 1; /* debugging: every load and store through the helper */
@@ -251,8 +252,8 @@ int hv_vm_create(const HvVmConfig *c, char *err, size_t errlen) {
     }
     static const uint8_t mac[6] = {0x02, 0x48, 0x56, 0x4d, 0x00, 0x01};
     if (hv_vmapple_create(&board, &m, cpus, (c->ram_mb ? c->ram_mb : 2048) << 20, &disk, &aux, &cfg, mac) != 0)
-        return fail(err, errlen, "Cannot build the machine (not enough memory for the guest's RAM?).");
-    if (hv_vmapple_load_rom(&board, c->rom) != 0) return fail(err, errlen, "Cannot read the ROM (AVPBooter.vmapple2.bin).");
+        return fail(err, errlen, "无法创建虚拟机，可能没有足够内存供 macOS 使用。");
+    if (hv_vmapple_load_rom(&board, c->rom) != 0) return fail(err, errlen, "无法读取 ROM（AVPBooter.vmapple2.bin）。");
     hv_vmapple_reset_cpu(&board);
     if (board.net && !c->no_net) {
         if (hv_net_attach(&m, board.net) != 0) fprintf(stderr, "hengevm: user-mode network unavailable\n");

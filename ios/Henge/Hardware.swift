@@ -1,3 +1,4 @@
+// Simplified Chinese translation, 2026-11-09.
 import SwiftUI
 import UIKit
 import GameController
@@ -46,8 +47,8 @@ enum Device {
 
     /// What a choice risks on this device, if anything. An install always gets at least 2 GB (Installer.install).
     static func memoryNote(_ gb: Int) -> String? {
-        if gb < 4 { return "macOS has little room under 4 GB, so it can be very slow." }
-        if gb > suggestedRAMGB { return "More than \(suggestedRAMGB) GB is a lot for this \(name): iOS may close Henge when macOS gets busy." }
+        if gb < 4 { return "内存低于 4 GB 时，macOS 的运行空间有限，速度可能很慢。" }
+        if gb > suggestedRAMGB { return "超过 \(suggestedRAMGB) GB 对这台 \(name) 负担较大，macOS 繁忙时，iOS 可能会关闭 Henge。" }
         return nil
     }
 
@@ -60,7 +61,7 @@ enum Device {
         return major < 13
     }()
 
-    static let chipTooOldText = "macOS won't run on this \(name). Henge needs an A14 or M1 chip or newer."
+    static let chipTooOldText = "这台 \(name) 无法运行 macOS。Henge 需要 A14、M1 或更新的芯片。"
 }
 
 /// A keyboard attached to the device. iOS reports each key going down and coming up by its HID usage,

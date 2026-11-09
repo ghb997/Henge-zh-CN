@@ -1,3 +1,4 @@
+// Simplified Chinese translation, 2026-11-09.
 #include "pvg_lite.h"
 #include "share.h"
 #include "net_slirp.h"
@@ -33,12 +34,12 @@ int henge_vm_boot(const char *rom, const char *disk, const char *aux, uint64_t e
                   int cpus, char *err, size_t errlen) {
     { extern void hv_prof_ios_start(void); hv_prof_ios_start(); }
     if (state) {
-        snprintf(err, errlen, "A machine has already run in this session. Quit Henge and open it again to start another.");
+        snprintf(err, errlen, "本次会话已运行过一台虚拟机。请关闭并重新打开 Henge，再启动其他虚拟机。");
         return -1;
     }
     HengeDualMapping *jit = henge_ios_jit_get_mapping();
     if (!jit || !jit->rw_addr) {
-        snprintf(err, errlen, "Henge has no JIT region. Turn on JIT first.");
+        snprintf(err, errlen, "Henge 尚无 JIT 内存区域，请先启用 JIT。");
         return -1;
     }
     HvVmConfig c = {.rom = rom, .disk = disk, .aux = aux, .ecid = ecid, .seed = seed, .ram_mb = ram_mb, .ncpus = cpus, .log = 1,
@@ -70,12 +71,12 @@ static void on_install_progress(int step, double p, void *user) {
 int henge_vm_install(const char *rom, const char *disk, const char *aux, uint64_t ecid, const char *ipsw,
                      const char *workdir, uint64_t ram_mb, int cpus, char *err, size_t errlen) {
     if (state) {
-        snprintf(err, errlen, "A machine has already run in this session. Quit Henge and open it again to start another.");
+        snprintf(err, errlen, "本次会话已运行过一台虚拟机。请关闭并重新打开 Henge，再启动其他虚拟机。");
         return -1;
     }
     HengeDualMapping *jit = henge_ios_jit_get_mapping();
     if (!jit || !jit->rw_addr) {
-        snprintf(err, errlen, "Henge has no JIT region. Turn on JIT first.");
+        snprintf(err, errlen, "Henge 尚无 JIT 内存区域，请先启用 JIT。");
         return -1;
     }
     HvVmConfig c = {.rom = rom, .disk = disk, .aux = aux, .ecid = ecid, .ram_mb = ram_mb, .ncpus = cpus, .log = 1,
@@ -85,7 +86,7 @@ int henge_vm_install(const char *rom, const char *disk, const char *aux, uint64_
     install_step = 0;
     install_progress = 0;
     if (hv_install_start(hv_vm_board()->vusb, ipsw, workdir, ecid, on_install_progress, NULL) != 0) {
-        snprintf(err, errlen, "The installer could not start.");
+        snprintf(err, errlen, "无法启动安装程序。");
         return -1;
     }
     state = 1;

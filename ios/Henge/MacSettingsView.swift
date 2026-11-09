@@ -1,3 +1,4 @@
+// Simplified Chinese translation, 2026-11-09.
 import SwiftUI
 
 /// One Mac: what it has, and what can be done with it.
@@ -14,8 +15,8 @@ struct MacSettingsView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
-                DeskHeading("Name")
-                TextField("Name", text: $mac.name)
+                DeskHeading("名称")
+                TextField("名称", text: $mac.name)
                     .font(.system(size: 16))
                     .submitLabel(.done)
                     .padding(.horizontal, 17)
@@ -23,15 +24,15 @@ struct MacSettingsView: View {
                     .deskCard()
                     .onSubmit(save)
 
-                DeskHeading("Memory")
+                DeskHeading("内存")
                 VStack(alignment: .leading, spacing: 12) {
                     HStack(alignment: .firstTextBaseline) {
                         Text("\(mac.ramMB / 1024) GB").font(.system(size: 26, weight: .bold))
                         Spacer()
-                        Text(Entitlements.increasedMemory ? "Outside the app's limit once JIT is on" : "Used from free storage if needed")
+                        Text(Entitlements.increasedMemory ? "开启 JIT 后可独立于应用内存上限分配" : "需要时使用可用存储空间")
                             .font(.system(size: 13)).foregroundStyle(Desk.dim).multilineTextAlignment(.trailing)
                     }
-                    Stepper("Memory", value: Binding(get: { mac.ramMB / 1024 }, set: { mac.ramMB = $0 * 1024; save() }), in: Device.memoryChoices)
+                    Stepper("内存", value: Binding(get: { mac.ramMB / 1024 }, set: { mac.ramMB = $0 * 1024; save() }), in: Device.memoryChoices)
                         .font(.system(size: 16))
                     if let note = Device.memoryNote(mac.ramMB / 1024) {
                         Text(note).font(.system(size: 13)).foregroundStyle(Desk.dim)
@@ -40,10 +41,10 @@ struct MacSettingsView: View {
                 .padding(17)
                 .deskCard()
 
-                DeskHeading("Processors")
+                DeskHeading("处理器")
                 Stepper(value: $cpus, in: 1...6) {
                     HStack {
-                        Text("CPUs").font(.system(size: 16))
+                        Text("CPU 数量").font(.system(size: 16))
                         Spacer()
                         Text("\(cpus)").font(.system(size: 16, weight: .semibold))
                     }
@@ -53,9 +54,9 @@ struct MacSettingsView: View {
                 .deskCard()
 
                 if Device.fittingScreen.height != 1080 {
-                    DeskHeading("Screen")
+                    DeskHeading("屏幕")
                     VStack(alignment: .leading, spacing: 12) {
-                        Picker("Screen", selection: Binding(get: {
+                        Picker("屏幕", selection: Binding(get: {
                             if mac.isRetina { return "retina" }
                             if mac.screen.width == Device.performanceScreen.width,
                                mac.screen.height == Device.performanceScreen.height { return "performance" }
@@ -72,33 +73,33 @@ struct MacSettingsView: View {
                             save()
                         })) {
                             if Device.isPad {
-                                Text("Retina").tag("retina")
-                                Text("Performance").tag("performance")
+                                Text("视网膜").tag("retina")
+                                Text("性能优先").tag("performance")
                             }
-                            Text("Fit this \(Device.name)").tag("fit")
+                            Text("适配此 \(Device.name)").tag("fit")
                             Text("16:9").tag("wide")
                         }
                         .pickerStyle(.segmented)
-                        Text("\(mac.screen.width) × \(mac.screen.height). \(Device.isPad ? "Performance renders about 30% fewer pixels. " : "")Changes apply the next time this Mac starts.")
+                        Text("\(mac.screen.width) × \(mac.screen.height)。\(Device.isPad ? "性能优先模式约减少 30% 的渲染像素。" : "")更改会在下次启动此 Mac 时生效。")
                             .font(.system(size: 13)).foregroundStyle(Desk.dim)
                     }
                     .padding(17)
                     .deskCard()
                 }
 
-                DeskHeading("Storage")
+                DeskHeading("存储空间")
                 VStack(spacing: 11) {
                     HStack {
-                        Text("\(ByteText.string(UInt64(max(mac.bytesUsed, 0)))) used").font(.system(size: 16))
+                        Text("已用 \(ByteText.string(UInt64(max(mac.bytesUsed, 0))))").font(.system(size: 16))
                         Spacer()
-                        Text("of \(ByteText.string(UInt64(max(mac.diskBytes, 0))))").font(.system(size: 16)).foregroundStyle(Desk.dim)
+                        Text("共 \(ByteText.string(UInt64(max(mac.diskBytes, 0))))").font(.system(size: 16)).foregroundStyle(Desk.dim)
                     }
                     DeskBar(fraction: Double(mac.bytesUsed) / Double(max(mac.diskBytes, 1)))
                 }
                 .padding(17)
                 .deskCard()
 
-                DeskHeading("Manage")
+                DeskHeading("管理")
                 manage
             }
             .padding(.horizontal, 16)
@@ -115,13 +116,13 @@ struct MacSettingsView: View {
             case .failure(let error): machines.lastError = error.localizedDescription
             }
         }
-        .confirmationDialog("Delete \(mac.name)?", isPresented: $confirmDelete, titleVisibility: .visible) {
-            Button("Delete", role: .destructive) {
+        .confirmationDialog("删除 \(mac.name)？", isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button("删除", role: .destructive) {
                 machines.delete(mac.id)
                 dismiss()
             }
         } message: {
-            Text("Its disk is removed from this \(Device.name).")
+            Text("其磁盘将从这台 \(Device.name) 中移除。")
         }
     }
 
@@ -129,26 +130,26 @@ struct MacSettingsView: View {
         VStack(spacing: 0) {
             if let name = machines.exporting {
                 VStack(alignment: .leading, spacing: 9) {
-                    Text("Exporting \(name)… keep Henge open").font(.system(size: 15))
+                    Text("正在导出 \(name)… 请保持 Henge 打开").font(.system(size: 15))
                     DeskBar(fraction: machines.exported)
                 }
                 .padding(17)
             } else {
-                row("Export", symbol: "square.and.arrow.up", tint: Desk.accentLight) { machines.export(mac) }
+                row("导出", symbol: "square.and.arrow.up", tint: Desk.accentLight) { machines.export(mac) }
             }
             if let folder = machines.lastExport {
                 divider
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Saved in Files, under Henge, Exports, \(folder.lastPathComponent). Deleting Henge deletes it too, so move it somewhere else first.")
+                    Text("已保存到“文件”中的 Henge/Exports/\(folder.lastPathComponent)。删除 Henge 时，此文件也会被删除，请先将其移至其他位置。")
                         .font(.system(size: 13)).foregroundStyle(Desk.dim)
-                    Button("Move Out of Henge…") { movingExport = true }
+                    Button("移出 Henge…") { movingExport = true }
                         .font(.system(size: 15, weight: .semibold)).foregroundStyle(Desk.accentLight)
                 }
                 .padding(17)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             divider
-            row("Delete this Mac", symbol: nil, tint: Desk.bad) { confirmDelete = true }
+            row("删除此 Mac", symbol: nil, tint: Desk.bad) { confirmDelete = true }
         }
         .deskCard()
     }

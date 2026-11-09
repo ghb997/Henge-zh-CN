@@ -1,5 +1,7 @@
+# Simplified Chinese build metadata, 2026-11-09.
 name: Henge
 options:
+  developmentLanguage: zh-Hans
   bundleIdPrefix: com.henge
   deploymentTarget:
     iOS: "17.0"

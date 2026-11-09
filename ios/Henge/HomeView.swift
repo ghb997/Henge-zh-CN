@@ -1,3 +1,4 @@
+// Simplified Chinese translation, 2026-11-09.
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -27,8 +28,8 @@ struct HomeView: View {
                         MacHero(mac: mac, jitReady: jitReady, start: { running = mac }, turnOnJIT: { jit.enable() },
                                 jitNote: jitReady ? nil : (JITBootstrap.lastFailure ?? jit.automaticDescription))
                         HStack(spacing: 10) {
-                            FactTile(title: "Disk", value: ByteText.string(UInt64(max(mac.bytesUsed, 0))))
-                            FactTile(title: "Last used", value: mac.lastUsedText)
+                            FactTile(title: "磁盘", value: ByteText.string(UInt64(max(mac.bytesUsed, 0))))
+                            FactTile(title: "上次使用", value: mac.lastUsedText)
                         }
                         others(besides: mac)
                     } else {
@@ -45,12 +46,12 @@ struct HomeView: View {
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Menu {
-                        Button("Install macOS…") { tab = .install }
-                        Button("Bring in a Mac from a computer…") { picking = true }
+                        Button("安装 macOS…") { tab = .install }
+                        Button("从电脑导入 Mac…") { picking = true }
                     } label: {
                         Image(systemName: "plus")
                     }
-                    .accessibilityLabel("Add a Mac")
+                    .accessibilityLabel("添加 Mac")
                 }
             }
             .fileImporter(isPresented: $picking, allowedContentTypes: [.folder]) { result in
@@ -71,12 +72,12 @@ struct HomeView: View {
         }
         if installer.busy {
             Button { tab = .install } label: {
-                NoticeRow(symbol: "arrow.down.circle.fill", text: "Installing \(installer.machineName)…", trailing: "See")
+                NoticeRow(symbol: "arrow.down.circle.fill", text: "正在安装 \(installer.machineName)…", trailing: "查看")
             }
         }
         if let name = machines.importing {
             NoticeRow(symbol: "square.and.arrow.down.fill",
-                      text: machines.unpacked > 0 ? String(format: "Unpacking %@'s disk… %.0f%%", name, machines.unpacked * 100) : "Bringing in \(name)…")
+                      text: machines.unpacked > 0 ? String(format: "正在解压 %@ 的磁盘… %.0f%%", name, machines.unpacked * 100) : "正在导入 \(name)…")
         }
         if let error = machines.lastError {
             NoticeRow(symbol: "exclamationmark.triangle.fill", text: error, tint: Desk.bad)
@@ -91,11 +92,11 @@ struct HomeView: View {
                 .frame(maxWidth: .infinity)
                 .frame(height: 190)
                 .background(Desk.raised.opacity(0.5), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-            Text("No Mac yet").font(.system(size: 24, weight: .bold))
-            Text("Install macOS on this \(Device.name), or bring in a Mac made on a computer.")
+            Text("还没有 Mac").font(.system(size: 24, weight: .bold))
+            Text("在这台 \(Device.name) 上安装 macOS，或导入在电脑上创建的 Mac。")
                 .font(.system(size: 15)).foregroundStyle(Desk.dim).multilineTextAlignment(.center)
-            Button("Install macOS") { tab = .install }.buttonStyle(DeskButtonStyle())
-            Button("Bring in a Mac") { picking = true }
+            Button("安装 macOS") { tab = .install }.buttonStyle(DeskButtonStyle())
+            Button("导入 Mac") { picking = true }
                 .font(.system(size: 15, weight: .semibold)).foregroundStyle(Desk.accentLight)
         }
         .padding(14)
@@ -105,7 +106,7 @@ struct HomeView: View {
     @ViewBuilder private func others(besides shown: VirtualMac) -> some View {
         let rest = machines.all.filter { $0.id != shown.id }
         if !rest.isEmpty {
-            DeskHeading("Other Macs")
+            DeskHeading("其他 Mac")
             VStack(spacing: 0) {
                 ForEach(rest) { other in
                     Button { chosen = other.id } label: {
@@ -135,9 +136,9 @@ extension VirtualMac {
     }
 
     var lastUsedText: String {
-        guard let lastUsed else { return "Never" }
-        if Calendar.current.isDateInToday(lastUsed) { return "Today" }
-        if Calendar.current.isDateInYesterday(lastUsed) { return "Yesterday" }
+        guard let lastUsed else { return "从未使用" }
+        if Calendar.current.isDateInToday(lastUsed) { return "今天" }
+        if Calendar.current.isDateInYesterday(lastUsed) { return "昨天" }
         return lastUsed.formatted(.dateTime.month(.abbreviated).day())
     }
 
@@ -166,7 +167,7 @@ private struct MacHero: View {
                     HStack {
                         Text(mac.name).font(.system(size: 24, weight: .bold)).foregroundStyle(Desk.text).lineLimit(1)
                         Spacer()
-                        Text(jitReady ? "JIT on" : "JIT off")
+                        Text(jitReady ? "JIT 已开启" : "JIT 未开启")
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundStyle(jitReady ? Desk.good : Desk.warn)
                             .padding(.horizontal, 11)
@@ -176,7 +177,7 @@ private struct MacHero: View {
                     }
                     .padding(.top, 15)
                     .padding(.horizontal, 5)
-                    Text("\(mac.summary) · \(cpus) CPUs")
+                    Text("\(mac.summary) · \(cpus) 个 CPU")
                         .font(.system(size: 15))
                         .foregroundStyle(Desk.dim)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -187,7 +188,7 @@ private struct MacHero: View {
             .buttonStyle(.plain)
             if jitReady {
                 Button(action: start) {
-                    Label("Start", systemImage: "play.fill")
+                    Label("启动", systemImage: "play.fill")
                 }
                 .buttonStyle(DeskButtonStyle())
                 .padding(.top, 15)
@@ -198,7 +199,7 @@ private struct MacHero: View {
                         .padding(.horizontal, 5)
                         .padding(.top, 10)
                 }
-                Button("Turn On JIT", action: turnOnJIT)
+                Button("开启 JIT", action: turnOnJIT)
                     .buttonStyle(DeskButtonStyle())
                     .padding(.top, 15)
             }

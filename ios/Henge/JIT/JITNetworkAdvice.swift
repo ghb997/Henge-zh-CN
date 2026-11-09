@@ -1,3 +1,4 @@
+// Simplified Chinese translation, 2026-11-09.
 // SPDX-License-Identifier: GPL-2.0-or-later
 import Foundation
 
@@ -68,19 +69,19 @@ enum JITNetworkAdvice {
         guard let problem = JITConnectionProblem(helperMessage: helperMessage) else { return nil }
         if problem == .pairing {
             return JITAdvice(
-                message: "This device closed the connection, which usually means it no longer accepts "
-                       + "Henge's pairing. Pair again, and check that LocalDevVPN is connected.",
+                message: "设备关闭了连接，通常是因为它已不再接受 "
+                       + "Henge 的配对。请重新配对，并确认 LocalDevVPN 已连接。",
                 actions: [.pairAgain, .connectLocalDevVPN])
         }
         guard situation == .cellularOnly else {
-            return JITAdvice(message: "Henge couldn't reach this device. Connect LocalDevVPN, then try again.",
+            return JITAdvice(message: "Henge 无法连接此设备。请连接 LocalDevVPN 后重试。",
                              actions: [.connectLocalDevVPN])
         }
         return JITAdvice(
-            message: "LocalDevVPN can show Connected while iOS still sends Henge's connection over cellular. "
-                   + "Turn Cellular Data off in Control Center, wait 2 seconds, then turn it back on. "
-                   + "Or join any Wi-Fi once; a hotspot works. "
-                   + "Keep LocalDevVPN connected, turn off other VPNs such as Tailscale, then try again.",
+            message: "即使 LocalDevVPN 显示已连接，iOS 仍可能通过蜂窝网络发送 Henge 的连接请求。"
+                   + "请在控制中心关闭蜂窝数据，等待 2 秒后重新开启。"
+                   + "也可以尝试连接一次 Wi-Fi 或热点。"
+                   + "请保持 LocalDevVPN 已连接，关闭 Tailscale 等其他 VPN 后重试。",
             actions: [.connectLocalDevVPN])
     }
 }
@@ -100,7 +101,7 @@ enum JITRetryPolicy {
 
     /// Shown while waiting to try attempt `nextAttempt` (the first retry is attempt 2).
     static func statusText(nextAttempt: Int) -> String {
-        "Retrying over LocalDevVPN (\(nextAttempt) of \(maxAttempts))…"
+        "正在通过 LocalDevVPN 重试（第 \(nextAttempt)/\(maxAttempts) 次）…"
     }
 
     static func decision(situation: NetworkSituation, problem: JITConnectionProblem, attempt: Int) -> JITRetryDecision {

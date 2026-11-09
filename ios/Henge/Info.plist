@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
+<!-- Simplified Chinese translation and build number, 2026-11-09. -->
 <dict>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
@@ -12,7 +13,11 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Henge</string>
+	<string>Henge 中文</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>zh-Hans</string>
+	</array>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -37,7 +42,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>100</string>
+	<string>101</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>stikjit</string>
@@ -62,7 +67,7 @@
 		<string>_remotepairing._tcp</string>
 	</array>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>Henge uses the local network to pair with this iPhone for JIT, without a computer.</string>
+	<string>Henge 使用本地网络与此设备配对，以便直接在设备上启用 JIT。</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

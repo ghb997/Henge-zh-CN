@@ -1,3 +1,4 @@
+// Simplified Chinese translation, 2026-11-09.
 // SPDX-License-Identifier: GPL-2.0-or-later
 import Foundation
 import UIKit
@@ -134,13 +135,13 @@ enum JITBootstrap {
             HengeLog.log("jit", "no trap servicer, but MAP_JIT executes here -- "
                              + "QEMU will map its own buffer")
         } else {
-            lastFailure = "The debugger is attached but is not answering trap "
-                        + "requests, and this device will not execute a MAP_JIT "
-                        + "mapping either, so no executable memory could be "
-                        + "claimed. This happens when Henge was opened from StikDebug's "
-                        + "app list, which attaches without Henge's script: open Henge "
-                        + "from the Home Screen and tap Turn On JIT. It also happens "
-                        + "inside another container app."
+            lastFailure = "调试器已连接，但未响应陷阱请求，"
+                        + "此设备也无法执行 MAP_JIT 映射，"
+                        + "因此无法获取可执行内存。"
+                        + "从 StikDebug 的应用列表打开 Henge 时，"
+                        + "调试器连接后没有运行 Henge 的脚本，就会出现此问题。请从主屏幕打开 Henge，"
+                        + "然后轻点“开启 JIT”。"
+                        + "在其他容器应用中运行时，也可能出现此问题。"
         }
         HengeLog.log("jit", ok ? "JIT region secured; it will be handed to QEMU later"
                               : "JIT prewarm FAILED -- StikDebug is not servicing traps")

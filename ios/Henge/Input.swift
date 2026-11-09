@@ -1,3 +1,4 @@
+// Simplified Chinese translation, 2026-11-09.
 import SwiftUI
 import UIKit
 
@@ -203,9 +204,9 @@ struct ModifierRow: View {
         HStack(spacing: 5) {
             HeldKey(label: "esc", code: Keys.escape)
             HeldKey(label: "tab", code: Keys.tab)
-            modifier("⌃", Keys.control, "Control")
-            modifier("⌥", Keys.option, "Option")
-            modifier("⌘", Keys.command, "Command")
+            modifier("⌃", Keys.control, "Control 键")
+            modifier("⌥", Keys.option, "Option 键")
+            modifier("⌘", Keys.command, "Command 键")
             HeldKey(label: "←", code: Keys.left)
             HeldKey(label: "↑", code: Keys.up)
             HeldKey(label: "↓", code: Keys.down)
@@ -217,7 +218,7 @@ struct ModifierRow: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Desk.raised, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
             }
-            .accessibilityLabel("Hide keyboard")
+            .accessibilityLabel("隐藏键盘")
         }
         .padding(.horizontal, 6)
         .padding(.vertical, 6)

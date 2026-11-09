@@ -1,3 +1,4 @@
+// Simplified Chinese translation, 2026-11-09.
 import Foundation
 import UIKit
 
@@ -155,7 +156,7 @@ final class Machines: ObservableObject {
             let data = try Data(contentsOf: folder.appendingPathComponent("machine.json"))
             let info = try JSONDecoder().decode(MachineFile.self, from: data)
             let missing = Self.required.filter { !FileManager.default.fileExists(atPath: folder.appendingPathComponent($0).path) }
-            guard missing.isEmpty, Self.hasDisk(folder) else { throw message("The folder is missing \((missing + (Self.hasDisk(folder) ? [] : ["disk.img"])).joined(separator: ", ")).") }
+            guard missing.isEmpty, Self.hasDisk(folder) else { throw message("文件夹缺少 \((missing + (Self.hasDisk(folder) ? [] : ["disk.img"])).joined(separator: ", "))。") }
             var mac = VirtualMac(name: info.name ?? folder.lastPathComponent, ecid: info.ecid, seed: info.seed ?? 0,
                                  ramMB: info.ramMB ?? 2048, diskBytes: 0)
             importing = mac.name
@@ -180,7 +181,7 @@ final class Machines: ObservableObject {
                         Task { @MainActor in Machines.shared.unpacked = fraction }
                     }, nil) == 0
                 }.value
-                guard ok else { try? fm.removeItem(at: dest); throw message("The packed disk could not be unpacked (not enough space?).") }
+                guard ok else { try? fm.removeItem(at: dest); throw message("无法解压磁盘，请检查可用存储空间。") }
                 if move { try? fm.removeItem(at: packed) }
             }
             if move { try? fm.removeItem(at: folder) }
@@ -230,7 +231,7 @@ final class Machines: ObservableObject {
         let free = (try? Self.root.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey]))?.volumeAvailableCapacityForImportantUsage ?? 0
         let needed = Int64(used) + (256 << 20)
         if free > 0 && free < needed {
-            throw message("Exporting \(mac.name) needs about \(ByteText.string(UInt64(needed))) free; this \(Device.name) has \(ByteText.string(UInt64(free))). Deleting a downloaded macOS installer (Install macOS, swipe it) frees about 16 GB.")
+            throw message("导出 \(mac.name) 需要约 \(ByteText.string(UInt64(needed))) 可用空间，此 \(Device.name) 当前可用 \(ByteText.string(UInt64(free)))。在“安装 macOS”页面侧滑删除已下载的安装镜像，可释放约 16 GB 空间。")
         }
         try fm.createDirectory(at: partial, withIntermediateDirectories: true)
         do {
@@ -245,7 +246,7 @@ final class Machines: ObservableObject {
                     Task { @MainActor in Machines.shared.exported = fraction }
                 }, nil) == 0
             }.value
-            guard ok else { throw message("The disk could not be written (not enough space?).") }
+            guard ok else { throw message("无法写入磁盘，请检查可用存储空间。") }
             try fm.moveItem(at: partial, to: final)
         } catch {
             try? fm.removeItem(at: partial)

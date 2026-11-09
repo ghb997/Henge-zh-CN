@@ -1,3 +1,4 @@
+// Simplified Chinese translation, 2026-11-09.
 import SwiftUI
 
 /// Download macOS (or use a copy already on this device) and install it on a new Mac.
@@ -33,7 +34,7 @@ struct InstallView: View {
                 .deskColumn()
             }
             .background(Desk.page)
-            .navigationTitle(installer.busy ? "Installing" : "Install macOS")
+            .navigationTitle(installer.busy ? "正在安装" : "安装 macOS")
             .task {
                 while !Task.isCancelled { // the region may be claimed after a hand-off to StikDebug
                     jitReady = JITBootstrap.ready
@@ -46,7 +47,7 @@ struct InstallView: View {
     // MARK: Choosing
 
     @ViewBuilder private var chooser: some View {
-        DeskHeading("Version")
+        DeskHeading("版本")
         VStack(spacing: 0) {
             ForEach(MacOSRelease.all) { r in
                 HStack(spacing: 0) {
@@ -61,13 +62,13 @@ struct InstallView: View {
                                 .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
-                        .accessibilityLabel("Delete the \(r.name) download")
+                        .accessibilityLabel("删除已下载的 \(r.name)")
                         .padding(.trailing, 6)
                     }
                 }
                     .contextMenu {
                         if Installer.haveImage(r) {
-                            Button("Delete Download", role: .destructive) { confirmDeleteDownload = r }
+                            Button("删除下载文件", role: .destructive) { confirmDeleteDownload = r }
                         }
                     }
                 if r.id != MacOSRelease.all.last?.id { Rectangle().fill(Desk.hairline).frame(height: 0.5) }
@@ -75,24 +76,24 @@ struct InstallView: View {
         }
         .deskCard()
         .id(refresh)
-        .confirmationDialog("Delete this download?", isPresented: Binding(get: { confirmDeleteDownload != nil }, set: { if !$0 { confirmDeleteDownload = nil } }),
+        .confirmationDialog("删除此下载文件？", isPresented: Binding(get: { confirmDeleteDownload != nil }, set: { if !$0 { confirmDeleteDownload = nil } }),
                             titleVisibility: .visible) {
-            Button("Delete Download", role: .destructive) {
+            Button("删除下载文件", role: .destructive) {
                 if let r = confirmDeleteDownload { Installer.deleteImage(r) }
                 refresh += 1
             }
         }
 
-        DeskHeading("New Mac")
+        DeskHeading("新建 Mac")
         VStack(spacing: 0) {
-            TextField("Name", text: $name)
+            TextField("名称", text: $name)
                 .font(.system(size: 16))
                 .padding(.horizontal, 17)
                 .padding(.vertical, 14)
             Rectangle().fill(Desk.hairline).frame(height: 0.5)
             Stepper(value: $ramGB, in: Device.memoryChoices) {
                 HStack {
-                    Text("Memory").font(.system(size: 16))
+                    Text("内存").font(.system(size: 16))
                     Spacer()
                     Text("\(ramGB) GB").font(.system(size: 16, weight: .semibold))
                 }
@@ -108,28 +109,28 @@ struct InstallView: View {
                     .padding(.bottom, 10)
             }
             Rectangle().fill(Desk.hairline).frame(height: 0.5)
-            Toggle("Delete the download after", isOn: $deleteAfter)
+            Toggle("安装后删除下载文件", isOn: $deleteAfter)
                 .font(.system(size: 16))
                 .padding(.horizontal, 17)
                 .padding(.vertical, 10)
         }
         .deskCard()
 
-        Button(Installer.haveImage(release) ? "Install" : "Download and Install") {
+        Button(Installer.haveImage(release) ? "安装" : "下载并安装") {
             installer.start(release, name: name.isEmpty ? "Mac" : name, ramMB: ramGB * 1024, cpus: cpus, keepImage: !deleteAfter)
         }
         .buttonStyle(DeskButtonStyle(enabled: jitReady && !Device.chipTooOld))
         .disabled(!jitReady || Device.chipTooOld)
         .padding(.top, 20)
-        Text(Device.chipTooOld ? Device.chipTooOldText : jitReady ? "Keep Henge open and the \(Device.name) plugged in. Needs about \(ByteText.string(UInt64(Installer.spaceNeeded(release)))) free."
-                                : JITBootstrap.lastFailure ?? "Turn on JIT first. \(jit.automaticDescription)")
+        Text(Device.chipTooOld ? Device.chipTooOldText : jitReady ? "请保持 Henge 打开，并为 \(Device.name) 接通电源。约需 \(ByteText.string(UInt64(Installer.spaceNeeded(release)))) 可用空间。"
+                                : JITBootstrap.lastFailure ?? "请先开启 JIT。\(jit.automaticDescription)")
             .font(.system(size: 13))
             .foregroundStyle(Desk.dim)
             .multilineTextAlignment(.center)
             .padding(.top, 10)
         if !jitReady && !Device.chipTooOld {
             // Before any Mac exists, this is the only place to ask for JIT (#23).
-            Button("Turn On JIT") { jit.enable() }
+            Button("开启 JIT") { jit.enable() }
                 .buttonStyle(DeskButtonStyle())
                 .padding(.top, 12)
         }
@@ -140,9 +141,9 @@ struct InstallView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(r.name).font(.system(size: 16, weight: .medium)).foregroundStyle(Desk.text)
                 if let size = Installer.imageSize(r) {
-                    Text("Downloaded, \(ByteText.string(UInt64(size)))").font(.system(size: 13)).foregroundStyle(Desk.good)
+                    Text("已下载，\(ByteText.string(UInt64(size)))").font(.system(size: 13)).foregroundStyle(Desk.good)
                 } else {
-                    Text("\(ByteText.string(UInt64(r.bytes))) download").font(.system(size: 13)).foregroundStyle(Desk.dim)
+                    Text("下载大小为 \(ByteText.string(UInt64(r.bytes)))").font(.system(size: 13)).foregroundStyle(Desk.dim)
                 }
                 Text(r.note).font(.system(size: 13)).foregroundStyle(Desk.dim)
             }
@@ -156,7 +157,7 @@ struct InstallView: View {
 
     // MARK: Going
 
-    private static let stages = ["Download", "Start installer", "Write macOS", "Check macOS", "Finish"]
+    private static let stages = ["下载", "启动安装程序", "写入 macOS", "检查 macOS", "完成"]
 
     private var stage: Int {
         switch installer.phase {
@@ -184,11 +185,11 @@ struct InstallView: View {
         let elapsed = Date().timeIntervalSince(stageStarted)
         guard stageSeen == stage, fraction > 0.03, fraction < 1, elapsed > 10 else { return nil }
         let minutes = Int((elapsed / fraction * (1 - fraction) / 60).rounded(.up))
-        return minutes <= 1 ? "About a minute left in this step" : "About \(minutes) minutes left in this step"
+        return minutes <= 1 ? "此步骤约剩 1 分钟" : "此步骤约剩 \(minutes) 分钟"
     }
 
     @ViewBuilder private var progress: some View {
-        Text("\(release.name) on this \(Device.name). Keep Henge open.")
+        Text("正在这台 \(Device.name) 上安装 \(release.name)。请保持 Henge 打开。")
             .font(.system(size: 16))
             .foregroundStyle(Desk.dim)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -200,7 +201,7 @@ struct InstallView: View {
                 Text("\(Int(fraction * 100))%")
                     .font(.system(size: 66, weight: .bold))
                     .monospacedDigit()
-                Text(timeLeft ?? "Step \(stage + 1) of \(Self.stages.count)")
+                Text(timeLeft ?? "第 \(stage + 1) 步，共 \(Self.stages.count) 步")
                     .font(.system(size: 15))
                     .foregroundStyle(Desk.dim)
                     .padding(.top, 2)
@@ -221,7 +222,7 @@ struct InstallView: View {
             stageStarted = Date()
         }
 
-        DeskHeading("Steps")
+        DeskHeading("安装步骤")
         VStack(spacing: 0) {
             ForEach(Array(Self.stages.enumerated()), id: \.offset) { i, title in
                 HStack {
@@ -242,7 +243,7 @@ struct InstallView: View {
         }
         .deskCard()
 
-        Button(details ? "Hide details" : "Show details") { withAnimation { details.toggle() } }
+        Button(details ? "隐藏详情" : "显示详情") { withAnimation { details.toggle() } }
             .font(.system(size: 15, weight: .semibold))
             .foregroundStyle(Desk.accentLight)
             .padding(.top, 14)
@@ -264,7 +265,7 @@ struct InstallView: View {
     private func finished(_ text: String) -> some View {
         VStack(spacing: 14) {
             Image(systemName: "checkmark.circle.fill").font(.system(size: 54)).foregroundStyle(Desk.good).padding(.top, 8)
-            Text("Installed").font(.system(size: 24, weight: .bold))
+            Text("安装完成").font(.system(size: 24, weight: .bold))
             Text(text).font(.system(size: 15)).foregroundStyle(Desk.dim).multilineTextAlignment(.center)
         }
         .padding(20)
@@ -275,16 +276,16 @@ struct InstallView: View {
 
     @ViewBuilder private func failed(_ text: String) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("It did not work").font(.system(size: 22, weight: .bold))
+            Text("安装失败").font(.system(size: 22, weight: .bold))
             Text(text).font(.system(size: 15))
-            Text("Quit Henge (swipe it away) and open it again before trying again: only one Mac can start per launch.")
+            Text("请在多任务界面上滑退出 Henge，然后重新打开再试。每次启动 Henge 只能启动一台 Mac。")
                 .font(.system(size: 13)).foregroundStyle(Desk.dim)
-            Button("Back") { installer.reset() }.buttonStyle(DeskButtonStyle()).padding(.top, 6)
+            Button("返回") { installer.reset() }.buttonStyle(DeskButtonStyle()).padding(.top, 6)
         }
         .padding(18)
         .deskCard(radius: 30)
         .padding(.top, 8)
-        DeskHeading("Log")
+        DeskHeading("日志")
         LogTail().padding(14).frame(maxWidth: .infinity, alignment: .leading).deskCard()
     }
 }

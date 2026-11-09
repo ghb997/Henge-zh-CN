@@ -1,3 +1,4 @@
+// Simplified Chinese translation, 2026-11-09.
 // SPDX-License-Identifier: GPL-2.0-or-later
 import Foundation
 import dnssd
@@ -29,7 +30,7 @@ enum RSDPortResolver {
         let browseError = DNSServiceBrowse(&browseRef, 0, 0, serviceType, "local.", browseCallback,
                                            context.toOpaque())
         guard browseError == kDNSServiceErr_NoError, let browseRef else {
-            return Result(port: nil, detail: "browse could not start (\(describe(browseError)))")
+            return Result(port: nil, detail: "无法启动服务发现（\(describe(browseError))）")
         }
         state.queue = queue
         DNSServiceSetDispatchQueue(browseRef, queue)
@@ -42,10 +43,10 @@ enum RSDPortResolver {
             state.resolveRefs.removeAll()
             state.finished = true
             if found, let port = state.port {
-                return Result(port: port, detail: "resolved \(serviceType) to port \(port) on \(state.host ?? "?")")
+                return Result(port: port, detail: "已将 \(serviceType) 解析为主机 \(state.host ?? "?") 上的端口 \(port)")
             }
-            var detail = "no port within \(Int(timeout))s: \(state.seen) service(s) seen"
-            if let error = state.lastError { detail += ", last error \(describe(error))" }
+            var detail = "在 \(Int(timeout)) 秒内未找到端口，已发现 \(state.seen) 个服务"
+            if let error = state.lastError { detail += "，最近的错误为 \(describe(error))" }
             return Result(port: nil, detail: detail)
         }
     }
@@ -104,7 +105,7 @@ enum RSDPortResolver {
 
     private static func describe(_ error: DNSServiceErrorType) -> String {
         switch Int(error) {
-        case Int(kDNSServiceErr_PolicyDenied): return "PolicyDenied: Local Network access is off for Henge"
+        case Int(kDNSServiceErr_PolicyDenied): return "PolicyDenied，Henge 的本地网络访问权限已关闭"
         case Int(kDNSServiceErr_NoAuth): return "NoAuth"
         case Int(kDNSServiceErr_ServiceNotRunning): return "ServiceNotRunning"
         default: return "DNSServiceErrorType \(error)"

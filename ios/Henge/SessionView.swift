@@ -1,3 +1,4 @@
+// Simplified Chinese translation, 2026-11-09.
 import SwiftUI
 import GameController
 
@@ -62,8 +63,8 @@ struct SessionView: View {
                         if display.isExternal {
                             VStack(spacing: 8) {
                                 Image(systemName: "display").font(.largeTitle)
-                                Text("Mac on external display").font(.headline)
-                                Text("Use the trackpad, keyboard or a connected mouse.")
+                                Text("Mac 正在外接显示器上显示").font(.headline)
+                                Text("请使用触控板、键盘或已连接的鼠标。")
                                     .font(.subheadline)
                             }
                             .foregroundStyle(.white)
@@ -89,7 +90,7 @@ struct SessionView: View {
                     floatingControls(layout)
                 }
                 if pointerRefused && !showRevealHint {
-                    Label("Make Henge full screen to use the trackpad or mouse as the Mac's", systemImage: "cursorarrow.rays")
+                    Label("请将 Henge 切换为全屏，以使用触控板或鼠标控制 Mac", systemImage: "cursorarrow.rays")
                         .font(.system(size: 15, weight: .medium))
                         .foregroundStyle(.white)
                         .padding(.horizontal, 18).padding(.vertical, 12)
@@ -99,7 +100,7 @@ struct SessionView: View {
                         .allowsHitTesting(false)
                 }
                 if showRevealHint {
-                    Label("Tap with three fingers to show the controls", systemImage: "hand.tap")
+                    Label("三指轻点可显示控制栏", systemImage: "hand.tap")
                         .font(.system(size: 15, weight: .medium))
                         .foregroundStyle(.white)
                         .padding(.horizontal, 18).padding(.vertical, 12)
@@ -109,7 +110,7 @@ struct SessionView: View {
                         .allowsHitTesting(false)
                 }
                 if showWallpaperTip && !showRevealHint && !pointerRefused {
-                    Label("For more speed, give this Mac a still wallpaper and set its screen saver to Never in System Settings.", systemImage: "speedometer")
+                    Label("为提高速度，请为此 Mac 设置静态墙纸，并在系统设置中将屏幕保护程序设为“永不”。", systemImage: "speedometer")
                         .font(.system(size: 15, weight: .medium))
                         .foregroundStyle(.white)
                         .multilineTextAlignment(.leading)
@@ -147,10 +148,10 @@ struct SessionView: View {
         .persistentSystemOverlays(.hidden)
         .preferredColorScheme(.dark)
         .sheet(isPresented: $showDetails) { details }
-        .confirmationDialog("Shut down \(mac.name)?", isPresented: $confirmStop, titleVisibility: .visible) {
-            Button("Shut Down", role: .destructive) { finish() }
+        .confirmationDialog("关闭 \(mac.name)？", isPresented: $confirmStop, titleVisibility: .visible) {
+            Button("关机", role: .destructive) { finish() }
         } message: {
-            Text("This turns the Mac off at once. Anything not saved on it is lost.")
+            Text("这将立即关闭 Mac，所有未保存的内容都会丢失。")
         }
         .onChange(of: zoomed) { on in
             zoomFollowing?.cancel()
@@ -264,17 +265,17 @@ struct SessionView: View {
     @ViewBuilder private func uprightControls(_ layout: Layout) -> some View {
         if !typing && !controlsHidden {
             HStack {
-                tool("eye.slash", "Hide controls") { hideControls() }
+                tool("eye.slash", "隐藏控制栏") { hideControls() }
                 Spacer()
-                tool("keyboard", "Keyboard") { typing = true }
+                tool("keyboard", "键盘") { typing = true }
                 Spacer()
                 pasteTool
                 Spacer()
-                tool("plus.magnifyingglass", "Zoom in") { zoomed = true }
+                tool("plus.magnifyingglass", "放大") { zoomed = true }
                 Spacer()
-                tool("info.circle", "Details") { showDetails = true }
+                tool("info.circle", "详情") { showDetails = true }
                 Spacer()
-                tool("power", "Shut down", tint: Desk.bad) { stopTapped() }
+                tool("power", "关机", tint: Desk.bad) { stopTapped() }
             }
             .padding(.horizontal, 22)
             .frame(width: layout.pad.width, height: 54)
@@ -292,22 +293,22 @@ struct SessionView: View {
             ZStack {
                 Trackpad()
                 if compact {
-                    Text("Trackpad").font(.system(size: 14)).foregroundStyle(Desk.faint).allowsHitTesting(false)
+                    Text("触控板").font(.system(size: 14)).foregroundStyle(Desk.faint).allowsHitTesting(false)
                 } else {
                     VStack(spacing: 6) {
-                        hint("Drag", "to move")
-                        hint("Tap", "to click")
-                        hint("Hold, then drag", "to grab")
-                        hint("Two fingers", "to scroll")
+                        hint("滑动", "移动指针")
+                        hint("轻点", "单击")
+                        hint("长按后拖动", "拖移项目")
+                        hint("双指滑动", "滚动页面")
                     }
                     .allowsHitTesting(false)
                 }
             }
             Rectangle().fill(Desk.hairline).frame(height: 0.5)
             HStack(spacing: 0) {
-                MouseButton(title: "Click", button: 0)
+                MouseButton(title: "左键单击", button: 0)
                 Rectangle().fill(Desk.hairline).frame(width: 0.5)
-                MouseButton(title: "Right-click", button: 1)
+                MouseButton(title: "右键单击", button: 1)
             }
             .frame(height: compact ? 50 : 70)
         }
@@ -360,13 +361,13 @@ struct SessionView: View {
         let landscape = layout.touch.width > layout.touch.height
         let top = layout.insets.top + (landscape ? 8 : 6)
         let pill = HStack(spacing: 4) {
-            tool("eye.slash", "Hide controls", tint: .white) { hideControls() }
-            tool("keyboard", "Keyboard", tint: .white) { typing.toggle() }
+            tool("eye.slash", "隐藏控制栏", tint: .white) { hideControls() }
+            tool("keyboard", "键盘", tint: .white) { typing.toggle() }
             pasteTool
-            tool(zoomed ? "minus.magnifyingglass" : "plus.magnifyingglass", zoomed ? "Zoom out" : "Zoom in", tint: zoomed ? Desk.accentLight : .white) { zoomed.toggle() }
-            tool("info.circle", "Details", tint: .white) { showDetails = true }
+            tool(zoomed ? "minus.magnifyingglass" : "plus.magnifyingglass", zoomed ? "缩小" : "放大", tint: zoomed ? Desk.accentLight : .white) { zoomed.toggle() }
+            tool("info.circle", "详情", tint: .white) { showDetails = true }
             Rectangle().fill(Color.white.opacity(0.3)).frame(width: 1, height: 22).padding(.horizontal, 4)
-            tool("power", "Shut down", tint: Desk.bad) { stopTapped() }
+            tool("power", "关机", tint: Desk.bad) { stopTapped() }
         }
         .padding(.horizontal, 8)
         .frame(height: 50)
@@ -436,9 +437,9 @@ struct SessionView: View {
 
     private func errorCard(_ text: String, _ layout: Layout) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("This Mac could not start").font(.system(size: 17, weight: .semibold))
+            Text("无法启动此 Mac").font(.system(size: 17, weight: .semibold))
             Text(text).font(.system(size: 14)).foregroundStyle(Desk.dim)
-            Button("Close") { close() }.font(.system(size: 15, weight: .semibold)).foregroundStyle(Desk.accentLight)
+            Button("关闭") { close() }.font(.system(size: 15, weight: .semibold)).foregroundStyle(Desk.accentLight)
         }
         .padding(18)
         .frame(width: min(layout.touch.width, 390) - 32, alignment: .leading)
@@ -448,9 +449,9 @@ struct SessionView: View {
 
     private var phase: String {
         switch state {
-        case 0: return error == nil ? "Starting…" : "Not started"
-        case 1: return userCode ? "macOS is running" : "Booting"
-        default: return "Stopped (\(String(cString: henge_vm_exit_reason())))"
+        case 0: return error == nil ? "正在启动…" : "未启动"
+        case 1: return userCode ? "macOS 正在运行" : "正在引导"
+        default: return "已停止（\(String(cString: henge_vm_exit_reason()))）"
         }
     }
 
@@ -458,36 +459,36 @@ struct SessionView: View {
         NavigationStack {
             List {
                 Section(phase) {
-                    LabeledContent("CPUs on", value: "\(cpusOn) of \(cpus)")
-                    LabeledContent("Temperature", value: Self.thermalLabel(thermalState))
-                    LabeledContent("Translated blocks", value: String(format: "%.1f M/s", blocksPerSecond / 1e6))
-                    LabeledContent("Network frames", value: "\(framesOut) out, \(framesIn) in")
-                    LabeledContent("Up", value: "\(Int(Date().timeIntervalSince(started))) s")
+                    LabeledContent("已启用 CPU", value: "\(cpusOn) / \(cpus)")
+                    LabeledContent("温度", value: Self.thermalLabel(thermalState))
+                    LabeledContent("翻译块速度", value: String(format: "%.1f 百万块/秒", blocksPerSecond / 1e6))
+                    LabeledContent("网络帧", value: "发送 \(framesOut)，接收 \(framesIn)")
+                    LabeledContent("运行时间", value: "\(Int(Date().timeIntervalSince(started))) 秒")
                 }
-                Section("Display") {
-                    Toggle("Color matching", isOn: $matchScreenColors)
-                    LabeledContent("Brightness", value: "\(Int(screenBrightness * 100))%")
+                Section("显示") {
+                    Toggle("色彩匹配", isOn: $matchScreenColors)
+                    LabeledContent("亮度", value: "\(Int(screenBrightness * 100))%")
                     Slider(value: $screenBrightness, in: 0.4...1)
-                    Text("Brightness dims only the Mac's screen.")
+                    Text("此亮度设置仅调节 Mac 画面。")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
-                Section("Pointer") {
-                    Picker("Size", selection: $cursorScale) {
+                Section("指针") {
+                    Picker("大小", selection: $cursorScale) {
                         Text("1×").tag(1)
                         Text("2×").tag(2)
                         Text("3×").tag(3)
                     }
                     .pickerStyle(.segmented)
-                    Toggle("Sharp edges", isOn: $sharpCursor)
-                    LabeledContent("Scroll speed", value: String(format: "%.1f×", scrollSpeed))
+                    Toggle("锐化边缘", isOn: $sharpCursor)
+                    LabeledContent("滚动速度", value: String(format: "%.1f×", scrollSpeed))
                     Slider(value: $scrollSpeed, in: 0.1...1.5)
-                    Text("The Mac supplies a small pointer image. Enlarging it can look blurry; 1× is the sharpest on an iPad. Scroll speed changes apply immediately.")
+                    Text("Mac 提供的指针图像较小，放大后可能模糊。在 iPad 上，1 倍大小最清晰。滚动速度更改会立即生效。")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
-                Section("Sharing") {
-                    LabeledContent("Clipboard and folder", value: helperRunning ? "On" : "Not set up")
+                Section("共享") {
+                    LabeledContent("剪贴板与文件夹", value: helperRunning ? "已开启" : "未设置")
                     if !helperRunning {
-                        Button("Type the Set Up Command") {
+                        Button("输入设置命令") {
                             showDetails = false
                             Task {
                                 try? await Task.sleep(nanoseconds: 600_000_000)
@@ -496,29 +497,29 @@ struct SessionView: View {
                         }
                     }
                     Text(helperRunning
-                         ? "Put files in Files, Henge, Shared to see them in the Henge folder in this Mac's home folder. What you copy on the Mac is copied here too, and the paste button pastes from here into the Mac."
-                         : "Once for each Mac: open Terminal on the Mac, tap this, then press Return. When macOS asks about henge-agent and local networks, choose Allow. It types \(Sharing.setUpCommand) and needs the Mac's keyboard layout to be U.S.")
+                         ? "将文件放入“文件”中的 Henge/Shared，即可在此 Mac 主文件夹下的 Henge 文件夹中看到它们。在 Mac 上复制的内容也会同步到此设备，粘贴按钮可将此设备的内容粘贴到 Mac。"
+                         : "每台 Mac 仅需设置一次。在 Mac 上打开“终端”，轻点此按钮，然后按回车键。当 macOS 询问是否允许 henge-agent 访问本地网络时，选择“允许”。此操作会输入 \(Sharing.setUpCommand)，需要将 Mac 的键盘布局设为“美国”。")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
-                Section("Lighter macOS") {
-                    Button("Type the Lighter macOS Command") {
+                Section("精简 macOS 特效") {
+                    Button("输入精简特效命令") {
                         showDetails = false
                         Task {
                             try? await Task.sleep(nanoseconds: 600_000_000)
                             await Keys.typeSlowly(Sharing.lightenCommand)
                         }
                     }
-                    Button("Type the Undo Command") {
+                    Button("输入撤销命令") {
                         showDetails = false
                         Task {
                             try? await Task.sleep(nanoseconds: 600_000_000)
                             await Keys.typeSlowly(Sharing.unlightenCommand)
                         }
                     }
-                    Text("Less drawing for the emulated CPUs: window and Dock animations, desktop widgets, the screen saver and a moving wallpaper go. Open Terminal on the Mac, tap the button and press Return, then log out and back in. Also turn on Reduce Motion and Reduce Transparency in the Mac's System Settings, Accessibility. Undo puts it back, apart from the wallpaper. Needs the Mac's keyboard layout to be U.S.")
+                    Text("关闭窗口和程序坞动画、桌面小组件、屏幕保护程序及动态墙纸，可减轻模拟 CPU 的绘制负担。在 Mac 上打开“终端”，轻点按钮并按回车键，然后退出登录并重新登录。还可以在 Mac 的“系统设置”→“辅助功能”中开启“减弱动态效果”和“降低透明度”。撤销命令可恢复除墙纸外的设置。需要将 Mac 的键盘布局设为“美国”。")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
-                Section("Log") {
+                Section("日志") {
                     VStack(alignment: .leading, spacing: 1) {
                         ForEach(Array(log.suffix(30).enumerated()), id: \.offset) { _, line in
                             Text(line).font(.system(size: 10, design: .monospaced)).foregroundStyle(.secondary)
@@ -526,7 +527,7 @@ struct SessionView: View {
                     }
                 }
             }
-            .navigationTitle("Details")
+            .navigationTitle("详情")
             .navigationBarTitleDisplayMode(.inline)
         }
         .preferredColorScheme(.dark)
@@ -536,11 +537,11 @@ struct SessionView: View {
 
     private static func thermalLabel(_ state: ProcessInfo.ThermalState) -> String {
         switch state {
-        case .nominal: return "Normal"
-        case .fair: return "Warm"
-        case .serious: return "Hot — performance reduced"
-        case .critical: return "Critical"
-        @unknown default: return "Unknown"
+        case .nominal: return "正常"
+        case .fair: return "温热"
+        case .serious: return "过热，性能已降低"
+        case .critical: return "严重过热"
+        @unknown default: return "未知"
         }
     }
 
@@ -548,7 +549,7 @@ struct SessionView: View {
         let ram = GuestMemory.prepare(mac)
         HengeLog.log("session", "available memory \(henge_available_memory() >> 20) MB")
         guard ram >= 1024 else {
-            error = "There is not room for this Mac's memory: it needs a few GB of free storage."
+            error = "无法为此 Mac 分配内存，需要数 GB 的可用存储空间。"
             return
         }
         var buffer = [CChar](repeating: 0, count: 256)
